@@ -13,6 +13,7 @@
 
 import type Bundler from '../Bundler';
 import type DeltaBundler, {TransformFn} from '../DeltaBundler';
+import type {VirtualModules} from '../DeltaBundler/FutureModules';
 import type {
   BundlerResolution,
   TransformInputOptions,
@@ -156,7 +157,11 @@ async function getTransformFn(
   );
   const assetExts = new Set(config.resolver.assetExts);
 
-  return async (modulePath: string, requireContext: ?RequireContext) => {
+  return async (
+    modulePath: string,
+    requireContext: ?RequireContext,
+    virtualModules?: ?VirtualModules,
+  ) => {
     let templateBuffer: Buffer;
 
     if (requireContext) {
@@ -193,6 +198,7 @@ async function getTransformFn(
         ),
       },
       templateBuffer,
+      virtualModules,
     );
   };
 }

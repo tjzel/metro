@@ -11,12 +11,13 @@
 
 'use strict';
 
-import type {TransformResult} from './types.flow';
+import type {TransformResult, VirtualModulesRawMap} from './types.flow';
 import type {LogEntry} from 'metro-core/private/Logger';
 import type {
   JsTransformerConfig,
   JsTransformOptions,
 } from 'metro-transform-worker';
+import {VirtualModules} from './FutureModules';
 
 const traverse = require('@babel/traverse').default;
 const crypto = require('crypto');
@@ -36,6 +37,7 @@ type TransformerInterface = {
     string,
     Buffer,
     JsTransformOptions,
+    ?VirtualModules,
   ): Promise<TransformResult<>>,
 };
 
@@ -78,6 +80,7 @@ async function transform(
   projectRoot: string,
   transformerConfig: TransformerConfig,
   fileBuffer?: Buffer,
+  virtualModulesRawMap?: ?VirtualModulesRawMap,
 ): Promise<Data> {
   let data;
 
@@ -87,12 +90,16 @@ async function transform(
   } else {
     data = fs.readFileSync(path.resolve(projectRoot, filename));
   }
+
+  const virtualModules = new VirtualModules(virtualModulesRawMap);
+
   return transformFile(
     filename,
     data,
     transformOptions,
     projectRoot,
     transformerConfig,
+    virtualModules,
   );
 }
 
@@ -102,6 +109,7 @@ async function transformFile(
   transformOptions: JsTransformOptions,
   projectRoot: string,
   transformerConfig: TransformerConfig,
+  virtualModules?: ?VirtualModules,
 ): Promise<Data> {
   // eslint-disable-next-line no-useless-call
   const Transformer: TransformerInterface = require.call(
@@ -127,6 +135,22 @@ async function transformFile(
     transformOptions,
   );
 
+  for (const dependency of result.dependencies) {
+    const {name, data: dependencyData} = dependency;
+    const virtualModule = virtualModules?.get(name);
+
+    if (virtualModule != null) {
+      // $FlowFixMe[cannot-write] we update the dependency data here because now we have a guarantee that the map of Virtual Modules is up to date
+      dependencyData.isVirtualModule = true;
+      // $FlowFixMe[cannot-write] we update the dependency data here because now we have a guarantee that the map of Virtual Modules is up to date
+      dependencyData.absolutePath = virtualModule.absolutePath;
+      // $FlowFixMe[cannot-write] we update the dependency data here because now we have a guarantee that the map of Virtual Modules is up to date
+      dependencyData.code = virtualModule.code;
+      // $FlowFixMe[cannot-write] we update the dependency data here because now we have a guarantee that the map of Virtual Modules is up to date
+      dependencyData.type = virtualModule.type;
+    }
+  }
+
   // The babel cache caches scopes and pathes for already traversed AST nodes.
   // Clearing the cache here since the nodes of the transformed file are no longer referenced.
   // This isn't stritcly necessary since the cache uses a WeakMap. However, WeakMap only permit
@@ -139,6 +163,9 @@ async function transformFile(
     transformFileStartLogEntry,
     filename,
   );
+
+  // $FlowFixMe[cannot-write] This has to be mutated in order to serialize it.
+  result.virtualModulesRawMap = result.virtualModules?.toRawMap();
 
   return {
     result,

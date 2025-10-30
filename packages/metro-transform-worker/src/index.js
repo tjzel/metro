@@ -60,6 +60,7 @@ const {
 } = require('metro/private/ModuleGraph/worker/importLocationsPlugin');
 const JsFileWrapping = require('metro/private/ModuleGraph/worker/JsFileWrapping');
 const nullthrows = require('nullthrows');
+import {VirtualModules} from 'metro/private/DeltaBundler/FutureModules';
 
 type MinifierConfig = $ReadOnly<{[string]: mixed, ...}>;
 
@@ -154,6 +155,7 @@ type JSFile = $ReadOnly<{
   type: JSFileType,
   functionMap: FBSourceFunctionMap | null,
   unstable_importDeclarationLocs?: ?$ReadOnlySet<string>,
+  virtualModules?: ?VirtualModules,
 }>;
 
 type JSONFile = {
@@ -180,6 +182,7 @@ export type JsOutput = $ReadOnly<{
 type TransformResponse = $ReadOnly<{
   dependencies: $ReadOnlyArray<TransformResultDependency>,
   output: $ReadOnlyArray<JsOutput>,
+  virtualModules?: ?VirtualModules,
 }>;
 
 function getDynamicDepsBehavior(
@@ -408,6 +411,7 @@ async function transformJS(
             ? (loc: BabelSourceLocation) =>
                 importDeclarationLocs.has(locToKey(loc))
             : null,
+        virtualModules: file.virtualModules,
       };
       ({ast, dependencies, dependencyMapName} = collectDependencies(ast, opts));
     } catch (error) {
@@ -504,9 +508,12 @@ async function transformJS(
     },
   ];
 
+  const {virtualModules} = file;
+
   return {
     dependencies,
     output,
+    virtualModules,
   };
 }
 
@@ -567,6 +574,10 @@ async function transformJSWithBabel(
       null,
     unstable_importDeclarationLocs:
       transformResult.metadata?.metro?.unstable_importDeclarationLocs,
+    virtualModules: new VirtualModules(
+      // TODO: use raw map here
+      transformResult.metadata?.metro?.virtualModules,
+    ),
   };
 
   return await transformJS(jsFile, context);

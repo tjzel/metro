@@ -12,6 +12,7 @@
 'use strict';
 
 import type {TransformResult} from '../DeltaBundler';
+import type {VirtualModules} from './FutureModules';
 import type {TransformerConfig, TransformOptions, Worker} from './Worker';
 import type {ConfigT} from 'metro-config';
 import type {Readable} from 'stream';
@@ -77,6 +78,7 @@ class WorkerFarm {
     filename: string,
     options: TransformOptions,
     fileBuffer?: Buffer,
+    virtualModules?: ?VirtualModules,
   ): Promise<TransformerResult> {
     try {
       const data = await this._worker.transform(
@@ -85,6 +87,7 @@ class WorkerFarm {
         this._config.projectRoot,
         this._transformerConfig,
         fileBuffer,
+        virtualModules?.toRawMap?.(),
       );
 
       Logger.log(data.transformFileStartLogEntry);

@@ -12,6 +12,7 @@
 'use strict';
 
 import type {TransformResult, TransformResultWithSource} from '../DeltaBundler';
+import type {VirtualModules} from './FutureModules';
 import type {TransformerConfig, TransformOptions} from './Worker';
 import type {ConfigT} from 'metro-config';
 
@@ -25,9 +26,10 @@ const fs = require('fs');
 const {Cache, stableHash} = require('metro-cache');
 const path = require('path');
 
-type GetOrComputeSha1Fn = string => Promise<
-  $ReadOnly<{content?: Buffer, sha1: string}>,
->;
+type GetOrComputeSha1Fn = (
+  path: string,
+  virtualModules?: ?VirtualModules,
+) => Promise<$ReadOnly<{content?: Buffer, sha1: string}>>;
 
 class Transformer {
   _config: ConfigT;
@@ -80,6 +82,7 @@ class Transformer {
     filePath: string,
     transformerOptions: TransformOptions,
     fileBuffer?: Buffer,
+    virtualModules?: ?VirtualModules,
   ): Promise<TransformResultWithSource<>> {
     const cache = this._cache;
 
@@ -144,7 +147,7 @@ class Transformer {
       sha1 = crypto.createHash('sha1').update(fileBuffer).digest('hex');
       content = fileBuffer;
     } else {
-      const result = await this._getSha1(filePath);
+      const result = await this._getSha1(filePath, virtualModules);
       sha1 = result.sha1;
       if (result.content) {
         content = result.content;
@@ -174,6 +177,7 @@ class Transformer {
           localPath,
           transformerOptions,
           content,
+          virtualModules,
         );
 
     // Only re-compute the full key if the SHA-1 changed. This is because

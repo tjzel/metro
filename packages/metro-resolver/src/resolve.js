@@ -60,6 +60,18 @@ function resolve(
     );
   }
 
+  if (
+    context.dependency?.data.isVirtualModule &&
+    context.dependency?.data.absolutePath &&
+    context.dependency?.data.type
+  ) {
+    return {
+      type: context.dependency.data.type,
+      filePath: context.dependency.data.absolutePath,
+      isVirtualModule: true,
+    };
+  }
+
   if (isRelativeImport(moduleName) || path.isAbsolute(moduleName)) {
     const result = resolveModulePath(context, moduleName, platform);
     if (result.type === 'failed') {

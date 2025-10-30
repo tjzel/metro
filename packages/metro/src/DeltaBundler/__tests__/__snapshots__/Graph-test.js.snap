@@ -119,6 +119,7 @@ TestGraph {
   "entryPoints": Set {
     "/bundle",
   },
+  "futureModules": FutureModules {},
   "transformOptions": Object {
     "dev": false,
     "hot": false,
@@ -167,6 +168,7 @@ TestGraph {
   "entryPoints": Set {
     "/bundle",
   },
+  "futureModules": FutureModules {},
   "transformOptions": Object {
     "dev": false,
     "hot": false,
