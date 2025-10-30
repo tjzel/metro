@@ -43,7 +43,6 @@
     "prettier": "2.8.8",
     "prettier-plugin-hermes-parser": "0.29.1",
     "progress": "^2.0.0",
-    "react-native-worklets": "0.6.0",
     "typescript": "5.8.3"
   },
   "scripts": {
@@ -52,8 +51,8 @@
     "clean-all": "rm -rf ./node_modules && rm -rf ./packages/*/node_modules && yarn run build-clean",
     "lint-fix": "eslint . --fix --cache && prettier --write .",
     "lint": "eslint . --cache && prettier --check .",
-    "postpublish": "npm run cleanup-release --workspaces --if-present",
-    "publish": "yarn run build-clean && yarn run build && npm run prepare-release --workspaces --if-present && npm publish --workspaces",
+    "cleanup-release": "npm run cleanup-release --workspaces --if-present",
+    "publish": "yarn run build-clean && yarn run build && npm run prepare-release --workspaces --if-present",
     "start": "node packages/metro/src/cli",
     "test": "yarn run typecheck && yarn run lint && yarn run build && yarn run jest",
     "test-coverage": "yarn run build && yarn run jest --coverage -i && node scripts/mapCoverage.js",
@@ -71,5 +70,5 @@
   "engines": {
     "node": ">=20.19.4"
   },
-  "packageManager": "yarn@4.10.3"
+  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
 }
